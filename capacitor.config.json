@@ -1,0 +1,9 @@
+{
+  "appId": "com.trainsection.app",
+  "appName": "TrainSection",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#111416"
+  }
+}
