@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { ytUrl } from './data/exercises.js';
+import { canGoBack } from './nav.js';
 
 /* ---------- icons (24px, stroke = currentColor) ---------- */
 const P = (d) => <path d={d} fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />;
@@ -42,6 +43,24 @@ export function ToastHost() {
   return msg ? <div class="toast" role="status">{msg}</div> : null;
 }
 
+/* ---------- Android back button: open dialogs and steps handle it first ---------- */
+const backHandlers = [];
+export function runBackHandler() {
+  const top = backHandlers[backHandlers.length - 1];
+  if (!top) return false;
+  top.current();
+  return true;
+}
+export function useBackHandler(fn, enabled = true) {
+  const ref = useRef(fn);
+  ref.current = fn;
+  useEffect(() => {
+    if (!enabled) return undefined;
+    backHandlers.push(ref);
+    return () => { const i = backHandlers.indexOf(ref); if (i >= 0) backHandlers.splice(i, 1); };
+  }, [enabled]);
+}
+
 /* ---------- confirm dialog (window.confirm is unreliable in webviews) ---------- */
 let confirmListener = null;
 export function confirmDialog(opts) {
@@ -51,11 +70,8 @@ export function confirmDialog(opts) {
   });
 }
 
-export function ConfirmHost() {
-  const [req, setReq] = useState(null);
-  useEffect(() => { confirmListener = setReq; return () => { confirmListener = null; }; }, []);
-  if (!req) return null;
-  const close = (v) => { req.resolve(v); setReq(null); };
+function ConfirmBox({ req, close }) {
+  useBackHandler(() => close(false));
   return (
     <div class="backdrop" onClick={(e) => { if (e.target === e.currentTarget) close(false); }}>
       <div class="sheet" role="dialog" aria-modal="true" aria-label={req.title}>
@@ -70,7 +86,16 @@ export function ConfirmHost() {
   );
 }
 
+export function ConfirmHost() {
+  const [req, setReq] = useState(null);
+  useEffect(() => { confirmListener = setReq; return () => { confirmListener = null; }; }, []);
+  if (!req) return null;
+  const close = (v) => { req.resolve(v); setReq(null); };
+  return <ConfirmBox req={req} close={close} />;
+}
+
 export function Sheet({ title, onClose, children }) {
+  useBackHandler(onClose);
   return (
     <div class="backdrop" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div class="sheet" role="dialog" aria-modal="true" aria-label={title}>
@@ -86,9 +111,16 @@ export function Sheet({ title, onClose, children }) {
 
 /* ---------- small pieces ---------- */
 export function Top({ title, sub, back, right }) {
+  // Go back in history when we came from another screen of the app;
+  // otherwise (opened from a link) the href takes us to `back`.
+  const onBack = (e) => {
+    if (!canGoBack()) return;
+    e.preventDefault();
+    history.back();
+  };
   return (
     <header class="top">
-      {back && <a class="iconbtn" href={back} aria-label="Volver"><Icon.back /></a>}
+      {back && <a class="iconbtn" href={back} onClick={onBack} aria-label="Volver"><Icon.back /></a>}
       <div class="grow">
         <h1>{title}</h1>
         {sub && <p class="sub">{sub}</p>}

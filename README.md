@@ -22,11 +22,18 @@ npm run build
 
 ## APK de Android
 
-Necesita Java 21 y el SDK de Android:
+Necesita Java 21 y el SDK de Android (plataforma 36):
 
 ```powershell
 $env:JAVA_HOME = "$env:USERPROFILE\.jdks\jdk-21.0.12.1+1"
+$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 npm run android:apk
 ```
 
 La APK queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
+
+- Se firma con la clave de depuración de este PC (`%USERPROFILE%\.android\debug.keystore`). Para instalar una versión nueva encima sin perder los datos, compílala en el mismo PC o copia ese archivo al nuevo.
+- Si Gradle falla con «Unable to establish loopback connection», ejecuta antes `$env:JAVA_TOOL_OPTIONS = "-Djdk.net.unixdomain.tmpdir=C:\no-afunix"`.
+- Iconos: `npm run icons` regenera los de la web y los de Android.
+
+Lo propio de la app Android: el botón «atrás» cierra diálogos y vuelve de pantalla, la pantalla no se apaga durante el entreno, el check-in deja elegir entre cámara y galería, y los recordatorios se abren directamente en la app de calendario.

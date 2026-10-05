@@ -6,7 +6,7 @@ import { pickFile, copyText } from '../lib/files.js';
 import { isStandalone, isIOS } from '../lib/install.js';
 import { exerciseName } from '../data/exercises.js';
 import { Top, Icon, Plate, toast } from '../ui.jsx';
-import { go } from '../nav.js';
+import { go, goBack } from '../nav.js';
 
 export function ImportRoutine({ code: initialCode }) {
   const s = useStore();
@@ -43,7 +43,8 @@ export function ImportRoutine({ code: initialCode }) {
     const r = result.routine;
     update((st) => ({ routines: [...st.routines, r], activeRoutineId: activate ? r.id : st.activeRoutineId }));
     toast(activate ? 'Rutina guardada y activada' : 'Rutina guardada');
-    go(s.profile ? 'rutinas' : 'hoy');
+    if (s.profile) goBack('rutinas');
+    else go('hoy', { replace: true });
   };
 
   return (

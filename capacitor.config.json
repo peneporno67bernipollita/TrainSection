@@ -3,7 +3,6 @@
   "appName": "TrainSection",
   "webDir": "dist",
   "android": {
-    "allowMixedContent": false,
-    "backgroundColor": "#111416"
+    "allowMixedContent": false
   }
 }

@@ -8,6 +8,7 @@ import { checkinStatus, measuresDue } from '../src/lib/checkin.js';
 import { PRESET_ROUTINE } from '../src/data/preset.js';
 import { EXERCISES } from '../src/data/exercises.js';
 import { RECIPES, MENUS, SHOPPING } from '../src/data/food.js';
+import { reminders, buildIcs, googleCalendarUrl } from '../src/lib/ics.js';
 
 const PROFILE = { sex: 'h', age: 20, height: 177, weight: 68, bmr: 1750, job: 0 };
 
@@ -144,4 +145,25 @@ test('data: every routine exercise, recipe and menu entry exists', () => {
   assert.equal(Math.round(total * 100) / 100, 28.66);
   const sets = PRESET_ROUTINE.days.map((d) => d.items.reduce((a, it) => a + it.sets, 0));
   assert.deepEqual(sets, [20, 21, 28, 17, 21]);
+});
+
+test('reminders: calendar file and Google Calendar links', () => {
+  const list = reminders({ gymTime: '18:00', checkinEvery: 14 });
+  assert.equal(list.length, 6);
+  const gym = list.find((e) => e.uid === 'gym');
+  assert.match(gym.start, /^\d{8}T180000$/);
+  assert.match(gym.end, /^\d{8}T193000$/);
+  assert.equal(weekday(gym.start.slice(0, 4) + '-' + gym.start.slice(4, 6) + '-' + gym.start.slice(6, 8)), 0); // a Monday
+  assert.match(reminders({ gymTime: '23:00' }).find((e) => e.uid === 'gym').end, /T235900$/);
+  assert.match(list.find((e) => e.uid === 'checkin').rrule, /INTERVAL=2;BYDAY=SU/);
+  assert.match(reminders({ checkinEvery: 28 }).find((e) => e.uid === 'checkin').rrule, /INTERVAL=4;/);
+  const ics = buildIcs({ gymTime: '18:00', checkinEvery: 14 });
+  assert.ok(ics.startsWith('BEGIN:VCALENDAR\r\n') && ics.endsWith('END:VCALENDAR\r\n'));
+  assert.equal(ics.match(/BEGIN:VEVENT/g).length, 6);
+  assert.equal(ics.match(/BEGIN:VALARM/g).length, 6);
+  const url = new URL(googleCalendarUrl(gym));
+  assert.equal(url.hostname, 'calendar.google.com');
+  assert.equal(url.searchParams.get('action'), 'TEMPLATE');
+  assert.equal(url.searchParams.get('dates'), gym.start + '/' + gym.end);
+  assert.equal(url.searchParams.get('recur'), 'RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR');
 });

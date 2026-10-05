@@ -3,7 +3,7 @@ import { useStore, update } from '../lib/store.js';
 import { PRESET_ID, PLATES } from '../data/preset.js';
 import { EXERCISES, MUSCLES, exerciseName, parseYouTubeId } from '../data/exercises.js';
 import { Top, Icon, Plate, Sheet, toast, confirmDialog, Field } from '../ui.jsx';
-import { go } from '../nav.js';
+import { goBack } from '../nav.js';
 
 const RESTS = [45, 60, 75, 90, 105, 120, 150, 180, 240];
 const LETTERS = ['', 'A', 'B', 'C', 'D'];
@@ -126,7 +126,7 @@ export function RoutineEditor({ id }) {
     };
     update((st) => ({ routines: st.routines.map((x) => (x.id === clean.id ? clean : x)) }));
     toast('Rutina guardada');
-    go('rutinas');
+    goBack('rutinas');
   };
 
   return (

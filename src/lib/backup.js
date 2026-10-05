@@ -26,13 +26,17 @@ export async function restoreBackup(text) {
   let obj;
   try { obj = JSON.parse(text); } catch { throw new Error('El archivo no es una copia de TrainSection.'); }
   if (!obj || obj.app !== 'TrainSection' || obj.v !== 1 || !obj.data) throw new Error('El archivo no es una copia de TrainSection.');
+  // Decode every photo before wiping, so a damaged file leaves the current data intact.
+  const photos = [];
+  try {
+    for (const [id, url] of Object.entries(obj.photos || {})) photos.push([id, await (await fetch(url)).blob()]);
+  } catch {
+    throw new Error('Las fotos de la copia están dañadas. No he cambiado nada.');
+  }
   await db.wipe();
   for (const k of db.KEYS) {
     if (obj.data[k] !== undefined && obj.data[k] !== null) await db.saveKey(k, obj.data[k]);
   }
-  for (const [id, url] of Object.entries(obj.photos || {})) {
-    const blob = await (await fetch(url)).blob();
-    await db.savePhoto(id, blob);
-  }
+  for (const [id, blob] of photos) await db.savePhoto(id, blob);
   await init();
 }

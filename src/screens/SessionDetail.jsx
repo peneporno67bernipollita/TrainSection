@@ -3,7 +3,7 @@ import { fmtLong } from '../lib/dates.js';
 import { doneSets, summary } from '../lib/training.js';
 import { exerciseInfo } from '../data/exercises.js';
 import { Top, Icon, Plate, toast, confirmDialog } from '../ui.jsx';
-import { go } from '../nav.js';
+import { goBack } from '../nav.js';
 
 export function SessionDetail({ id }) {
   const s = useStore();
@@ -15,7 +15,7 @@ export function SessionDetail({ id }) {
     if (!ok) return;
     update((st) => ({ sessions: st.sessions.filter((y) => y.id !== id) }));
     toast('Entreno borrado');
-    go('calendario');
+    goBack('calendario');
   };
 
   const minutes = x.finishedAt ? Math.round((x.finishedAt - x.startedAt) / 60000) : 0;

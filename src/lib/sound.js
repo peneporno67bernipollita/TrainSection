@@ -1,3 +1,5 @@
+import { isNative } from './files.js';
+
 let ctx = null;
 
 // Must be called from a user gesture once so iOS lets us play sound later.
@@ -31,6 +33,15 @@ export function beep(times = 3) {
 
 let lock = null;
 export async function keepAwake(on) {
+  if (isNative()) {
+    // In the Android app a window flag keeps the screen on: unlike the Wake
+    // Lock API it isn't dropped when the page is hidden, and old WebViews lack it.
+    try {
+      const { KeepAwake } = await import('@capacitor-community/keep-awake');
+      await (on ? KeepAwake.keepAwake() : KeepAwake.allowSleep());
+    } catch { /* plugin not available */ }
+    return;
+  }
   try {
     if (on && 'wakeLock' in navigator && document.visibilityState === 'visible') {
       if (!lock) {

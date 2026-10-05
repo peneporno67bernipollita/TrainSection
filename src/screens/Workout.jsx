@@ -6,7 +6,7 @@ import { clock } from '../lib/dates.js';
 import { parseNum, miles } from '../lib/format.js';
 import { beep, unlockAudio, keepAwake } from '../lib/sound.js';
 import { Top, Icon, Videos, toast, confirmDialog, Sheet } from '../ui.jsx';
-import { go } from '../nav.js';
+import { goBack } from '../nav.js';
 
 const shown = (v) => (v == null ? '' : typeof v === 'number' ? String(v).replace('.', ',') : v);
 
@@ -183,7 +183,7 @@ export function Workout() {
   const askFinish = async () => {
     if (!done) {
       const ok = await confirmDialog({ title: 'Sin series registradas', text: 'No has marcado ninguna serie como hecha. ¿Quieres descartar este entreno?', ok: 'Descartar', danger: true });
-      if (ok) { update({ current: null }); go('hoy'); }
+      if (ok) { update({ current: null }); goBack('hoy'); }
       return;
     }
     const sess = normalize(cur);
@@ -205,12 +205,12 @@ export function Workout() {
     update((st) => ({ sessions: [...st.sessions, sess].sort((a, b) => (a.date === b.date ? a.startedAt - b.startedAt : a.date < b.date ? -1 : 1)), current: null }));
     setFinishing(null);
     toast(finishing.prs.length ? 'Entreno guardado · ' + finishing.prs.length + ' récord' + (finishing.prs.length > 1 ? 's' : '') : 'Entreno guardado');
-    go('hoy');
+    goBack('hoy');
   };
 
   const discard = async () => {
     const ok = await confirmDialog({ title: 'Descartar entreno', text: 'Se borrará todo lo que has apuntado en este entreno.', ok: 'Descartar', danger: true });
-    if (ok) { update({ current: null }); go('hoy'); }
+    if (ok) { update({ current: null }); goBack('hoy'); }
   };
 
   return (

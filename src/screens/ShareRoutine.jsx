@@ -19,8 +19,8 @@ export function ShareRoutine({ id }) {
 
   const copy = async () => { toast((await copyText(data.link)) ? 'Enlace copiado' : 'No he podido copiar; mantén pulsado el texto'); };
   const share = async () => {
-    const ok = await shareText('Rutina ' + r.name, 'Te paso mi rutina de TrainSection: ' + r.name, data.link);
-    if (!ok) copy();
+    const result = await shareText('Rutina ' + r.name, 'Te paso mi rutina de TrainSection: ' + r.name, data.link);
+    if (result === 'unsupported') copy();
   };
 
   return (

@@ -3,11 +3,11 @@ import { useStore, update } from '../lib/store.js';
 import { today, fmtLong } from '../lib/dates.js';
 import { POSES, MEASURES, measuresDue } from '../lib/checkin.js';
 import { compressImage } from '../lib/image.js';
-import { pickFile } from '../lib/files.js';
+import { pickFile, isNative, cleanCameraFiles } from '../lib/files.js';
 import { savePhoto } from '../lib/db.js';
 import { parseNum, dec } from '../lib/format.js';
-import { Top, Icon, Field, toast } from '../ui.jsx';
-import { go } from '../nav.js';
+import { Top, Icon, Field, Sheet, toast } from '../ui.jsx';
+import { goBack } from '../nav.js';
 
 function PoseTile({ label, blob, onPick }) {
   const [url, setUrl] = useState(null);
@@ -35,9 +35,13 @@ export function Checkin() {
   const [waist, setWaist] = useState('');
   const [measures, setMeasures] = useState({});
   const [busy, setBusy] = useState(false);
+  const [choosing, setChoosing] = useState(null);
 
-  const take = async (pose) => {
-    const file = await pickFile('image/*');
+  // The browser offers camera or gallery by itself; the Android app asks here.
+  const take = async (pose, source) => {
+    if (isNative() && !source) { setChoosing(pose); return; }
+    setChoosing(null);
+    const file = await pickFile('image/*', source === 'camera' ? 'environment' : undefined);
     if (!file) return;
     try {
       const blob = await compressImage(file);
@@ -74,7 +78,8 @@ export function Checkin() {
         settings: { ...st.settings, postponed: null }
       }));
       toast('Check-in guardado');
-      go('hoy');
+      cleanCameraFiles();
+      goBack('hoy');
     } catch (e) {
       toast('No se han podido guardar las fotos. ¿Queda espacio en el móvil?');
     } finally {
@@ -117,6 +122,12 @@ export function Checkin() {
         <button type="button" class="btn primary block" disabled={busy} onClick={save}>{busy ? 'Guardando…' : 'Guardar check-in'}</button>
         <p class="tiny muted center">Las fotos se guardan solo en este móvil. Haz una copia de seguridad de vez en cuando desde Ajustes.</p>
       </main>
+      {choosing && (
+        <Sheet title={POSES.find(([k]) => k === choosing)?.[1] || 'Foto'} onClose={() => setChoosing(null)}>
+          <button type="button" class="btn primary block" onClick={() => take(choosing, 'camera')}><Icon.camera /> Hacer foto</button>
+          <button type="button" class="btn block" onClick={() => take(choosing, 'gallery')}>Elegir de la galería</button>
+        </Sheet>
+      )}
     </>
   );
 }

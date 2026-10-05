@@ -108,7 +108,7 @@ export function Today() {
         {ci.due && (
           <div class={'card' + (ci.gate ? ' alert' : '')}>
             <p class="k">{ci.first ? 'Antes de empezar' : 'Toca check-in'}</p>
-            <p>{ci.first ? 'Haz tus fotos iniciales, el peso y la cintura. Así podrás comparar dentro de unas semanas.' : 'Cada 14 días: 4 fotos, peso y cintura. Hasta que lo hagas, el entreno queda bloqueado.'}</p>
+            <p>{ci.first ? 'Haz tus fotos iniciales, el peso y la cintura. Así podrás comparar dentro de unas semanas.' : 'Cada ' + s.settings.checkinEvery + ' días: 4 fotos, peso y cintura. Hasta que lo hagas, el entreno queda bloqueado.'}</p>
             <div class="btns">
               <a class="btn primary" href="#/checkin"><Icon.camera /> Hacer check-in</a>
               {ci.canPostpone && <button type="button" class="btn ghost" onClick={postpone}>Hoy no puedo</button>}

@@ -6,7 +6,7 @@ import { today, nextMonday } from '../lib/dates.js';
 import { targets } from '../lib/nutrition.js';
 import { miles } from '../lib/format.js';
 import { ProfileForm } from './Settings.jsx';
-import { toast, Field } from '../ui.jsx';
+import { toast, Field, useBackHandler } from '../ui.jsx';
 import { go } from '../nav.js';
 
 function Logo() {
@@ -28,6 +28,7 @@ export function Onboarding() {
   const [code, setCode] = useState('');
   const [routine, setRoutine] = useState(null);
   const [start, setStart] = useState(nextMonday(today()));
+  useBackHandler(() => setStep((x) => Math.max(0, x - 1)), step > 0);
 
   const activeName = s.routines.find((r) => r.id === s.activeRoutineId)?.name;
 
@@ -57,7 +58,7 @@ export function Onboarding() {
       }
       return patch;
     });
-    go('hoy');
+    go('hoy', { replace: true });
   };
 
   const tg = profile ? targets(profile, 'up') : null;

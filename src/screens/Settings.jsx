@@ -2,13 +2,13 @@ import { useEffect, useState } from 'preact/hooks';
 import { useStore, update } from '../lib/store.js';
 import { targets } from '../lib/nutrition.js';
 import { buildBackup, restoreBackup } from '../lib/backup.js';
-import { buildIcs } from '../lib/ics.js';
-import { saveFile, pickFile, isNative } from '../lib/files.js';
+import { buildIcs, reminders, googleCalendarUrl } from '../lib/ics.js';
+import { saveFile, openFile, pickFile, isNative } from '../lib/files.js';
 import { wipe } from '../lib/db.js';
 import { today, fmtShort } from '../lib/dates.js';
 import { miles, parseNum, dec } from '../lib/format.js';
 import { Top, Field, toast, confirmDialog } from '../ui.jsx';
-import { go } from '../nav.js';
+import { goBack } from '../nav.js';
 
 export const APP_VERSION = '1.0.0';
 
@@ -100,7 +100,8 @@ export function Settings() {
   };
 
   const importBackup = async () => {
-    const file = await pickFile('application/json,.json');
+    // A copy that came through a chat app may lose its JSON type; the content is checked anyway.
+    const file = await pickFile('application/json,.json,text/plain,application/octet-stream');
     if (!file) return;
     const ok = await confirmDialog({ title: 'Restaurar copia', text: 'Se sustituirán todos los datos de esta app por los de la copia.', ok: 'Restaurar', danger: true });
     if (!ok) return;
@@ -108,22 +109,31 @@ export function Settings() {
     try {
       await restoreBackup(await file.text());
       toast('Copia restaurada');
-      go('hoy');
+      goBack('hoy');
     } catch (e) {
       toast(e.message || 'No se pudo restaurar');
     } finally { setBusy(false); }
   };
 
-  const reminders = async () => {
-    const ics = buildIcs({ gymTime: s.settings.gymTime, checkinEvery: s.settings.checkinEvery });
-    await saveFile('trainsection-recordatorios.ics', ics, 'text/calendar');
+  const plan = { gymTime: s.settings.gymTime, checkinEvery: s.settings.checkinEvery };
+  const exportReminders = async () => {
+    const name = 'trainsection-recordatorios.ics';
+    try {
+      if (isNative()) {
+        // Calendar apps import .ics files when opened, but don't appear when sharing.
+        try { await openFile(name, buildIcs(plan), 'text/calendar'); return; } catch { /* no calendar app: share it */ }
+      }
+      await saveFile(name, buildIcs(plan), 'text/calendar');
+    } catch {
+      toast('No se pudo crear el archivo');
+    }
   };
 
   const wipeAll = async () => {
     const ok = await confirmDialog({ title: 'Borrar todo', text: 'Se borrarán entrenos, fotos, peso y rutinas de este móvil. No se puede deshacer. Haz antes una copia.', ok: 'Borrar todo', danger: true });
     if (!ok) return;
     await wipe();
-    location.hash = '#/hoy';
+    history.replaceState({ depth: 0 }, '', '#/hoy'); // start over: nothing to go back to
     location.reload();
   };
 
@@ -147,8 +157,15 @@ export function Settings() {
               </select>
             </Field>
           </div>
-          <button type="button" class="btn" onClick={reminders}>Añadir recordatorios al calendario</button>
+          <button type="button" class="btn" onClick={exportReminders}>Añadir recordatorios al calendario</button>
           <p class="small muted">Crea avisos de gimnasio (L–V), batido, calistenia, tápers del domingo, check-in y hora de dormir. Ábrelo con tu app de calendario.</p>
+          <details class="cue">
+            <summary>¿No se han añadido? Hazlo uno a uno</summary>
+            <p class="small muted">Cada botón abre Google Calendar con el aviso ya rellenado: revisa la hora y pulsa «Guardar».</p>
+            <div class="btns">
+              {reminders(plan).map((e) => <a key={e.uid} class="btn sm" href={googleCalendarUrl(e)} target="_blank" rel="noopener">{e.title}</a>)}
+            </div>
+          </details>
         </div>
 
         <div class="card">
