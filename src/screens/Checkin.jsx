@@ -113,7 +113,7 @@ export function Checkin() {
             <div class="grid2">
               {MEASURES.map(([k, label]) => (
                 <Field key={k} label={label + ' (cm)'}>
-                  <input class="input num" inputMode="decimal" value={measures[k] || ''} onInput={(e) => setMeasures({ ...measures, [k]: e.currentTarget.value })} />
+                  <input class="input num" inputMode="decimal" value={measures[k] || ''} onInput={(e) => { const v = e.currentTarget.value; setMeasures((m) => ({ ...m, [k]: v })); }} />
                 </Field>
               ))}
             </div>

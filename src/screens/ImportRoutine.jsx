@@ -54,7 +54,12 @@ export function ImportRoutine({ code: initialCode }) {
         {inBrowserOnIPhone && (
           <div class="card alert">
             <p class="k">En iPhone</p>
-            <p class="small">Si ya tienes TrainSection en la pantalla de inicio, copia el código y pégalo allí: Safari y la app guardan los datos por separado.</p>
+            <p class="small">Safari y la app de la pantalla de inicio guardan los datos por separado, así que no importes la rutina aquí:</p>
+            <ol class="dots small">
+              <li>Si aún no la tienes, instálala: Compartir → «Añadir a pantalla de inicio».</li>
+              <li>Copia el código con el botón de abajo.</li>
+              <li>Abre TrainSection desde la pantalla de inicio y pégalo en Rutinas → «Importar de un amigo».</li>
+            </ol>
             <button type="button" class="btn primary" onClick={async () => toast((await copyText(text)) ? 'Código copiado' : 'No he podido copiar')}><Icon.copy /> Copiar código</button>
           </div>
         )}

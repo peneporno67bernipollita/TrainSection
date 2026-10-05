@@ -22,7 +22,8 @@ export function ProfileForm({ initial, onSave, submitLabel = 'Guardar' }) {
     bmr: initial?.bmr ?? '',
     job: String(initial?.job ?? 0)
   });
-  const set = (k) => (e) => setP({ ...p, [k]: e.currentTarget.value });
+  // Functional update: browser autofill can change several fields in one go.
+  const set = (k) => (e) => { const v = e.currentTarget.value; setP((prev) => ({ ...prev, [k]: v })); };
   const submit = (e) => {
     e.preventDefault();
     const age = parseNum(p.age), height = parseNum(p.height), weight = parseNum(p.weight), bmr = parseNum(p.bmr);
